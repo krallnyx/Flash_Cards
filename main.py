@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 import pandas
 import random
 
@@ -39,14 +40,20 @@ class FlashCards:
         wrong_button = Button(image=self.canvas.wrong_image, highlightthickness=0, command=self.create_new_card)
         wrong_button.grid(column=0, row=1)
         self.create_new_card()
-        self.flip_timer = self.window.after(3000, func=self.flip_card)
 
     def create_new_card(self):
         try:
             self.window.after_cancel(self.flip_timer)
         except AttributeError:
             pass
-        self.current_card = random.choice(self.dict)
+        if len(self.dict) > 0:
+            self.current_card = random.choice(self.dict)
+
+        else:
+            messagebox.showinfo(title="Congratulations", message="You know all the words from the list.\n"
+                                                                 "The list will now be reset to it's original content.")
+            data = pandas.read_csv("data/french_words.csv")
+            self.dict = data.to_dict(orient="records")
         self.canvas.itemconfig(self.card_background, image=self.canvas.card_front_image)
         self.canvas.itemconfig(self.card_title, text="French", fill="black")
         self.canvas.itemconfig(self.card_word, text=self.current_card["French"], fill="black")
@@ -58,6 +65,9 @@ class FlashCards:
         self.canvas.itemconfig(self.card_background, image=self.canvas.card_back_image)
 
     def remove_from_list(self):
+        self.dict.remove(self.current_card)
+        data = pandas.DataFrame(self.dict)
+        data.to_csv("data/words_to_learn.csv", index=False)
         self.create_new_card()
 
 
